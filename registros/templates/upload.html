@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Upload de Planilha</title>
+    <style>
+        :root {
+            --bg: #0b1118;
+            --panel: #131c26;
+            --line: #253445;
+            --text: #ebf3fb;
+            --muted: #94a8bc;
+            --accent: #8ef0a7;
+            --accent-strong: #56d67a;
+            --accent-shadow: #2a8f48;
+        }
+
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+            background:
+                radial-gradient(circle at top, rgba(142, 240, 167, 0.12), transparent 28%),
+                linear-gradient(180deg, #0d141c 0%, var(--bg) 100%);
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px 16px;
+        }
+
+        .panel {
+            width: min(560px, 100%);
+            background: rgba(19, 28, 38, 0.94);
+            border: 1px solid rgba(255, 255, 255, 0.05);
+            border-radius: 28px;
+            box-shadow: 0 24px 80px rgba(0, 0, 0, 0.38);
+            padding: 40px 28px 32px;
+            text-align: center;
+            backdrop-filter: blur(10px);
+        }
+
+        .sheet-icon {
+            width: 88px;
+            height: 104px;
+            margin: 0 auto 24px;
+            border-radius: 18px;
+            background: linear-gradient(180deg, #f3fff5 0%, #b7f3c5 100%);
+            position: relative;
+            box-shadow:
+                0 18px 34px rgba(0, 0, 0, 0.3),
+                0 0 0 8px rgba(142, 240, 167, 0.08);
+        }
+
+        .sheet-icon::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            right: 0;
+            width: 28px;
+            height: 28px;
+            background: linear-gradient(135deg, #d9f8df 50%, #7ae292 50%);
+            clip-path: polygon(0 0, 100% 0, 100% 100%);
+            border-top-right-radius: 18px;
+        }
+
+        .sheet-icon::after {
+            content: "";
+            position: absolute;
+            left: 18px;
+            right: 18px;
+            top: 28px;
+            height: 46px;
+            background:
+                linear-gradient(#44be69, #44be69) 0 0 / 100% 6px no-repeat,
+                linear-gradient(#8ad79c, #8ad79c) 0 16px / 100% 4px no-repeat,
+                linear-gradient(#8ad79c, #8ad79c) 0 30px / 100% 4px no-repeat,
+                linear-gradient(#8ad79c, #8ad79c) 0 44px / 100% 4px no-repeat,
+                linear-gradient(90deg, #8ad79c 0 4px, transparent 4px 33%, #8ad79c 33% 37%, transparent 37% 66%, #8ad79c 66% 70%, transparent 70%);
+        }
+
+        h2 {
+            margin: 0;
+            font-size: clamp(1.9rem, 4vw, 2.5rem);
+            letter-spacing: 0.02em;
+        }
+
+        .subtitle {
+            margin: 12px auto 28px;
+            max-width: 36ch;
+            color: var(--muted);
+            line-height: 1.6;
+        }
+
+        form {
+            display: grid;
+            gap: 18px;
+            justify-items: center;
+        }
+
+        .file-input {
+            width: min(360px, 100%);
+            padding: 14px;
+            color: var(--muted);
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px dashed var(--line);
+            border-radius: 16px;
+        }
+
+        .file-input::file-selector-button {
+            margin-right: 12px;
+            border: 0;
+            background: #1d2a37;
+            color: var(--text);
+            border-radius: 10px;
+            padding: 10px 14px;
+            cursor: pointer;
+        }
+
+        .submit-button {
+            border: 0;
+            background: linear-gradient(180deg, var(--accent) 0%, var(--accent-strong) 100%);
+            color: #04250f;
+            font-size: 0.98rem;
+            font-weight: 700;
+            padding: 14px 28px;
+            border-radius: 14px;
+            cursor: pointer;
+            box-shadow:
+                0 10px 0 var(--accent-shadow),
+                0 18px 28px rgba(86, 214, 122, 0.28);
+            transform: translateY(0);
+            transition: transform 0.15s ease, box-shadow 0.15s ease, filter 0.15s ease;
+        }
+
+        .submit-button:hover {
+            filter: brightness(1.04);
+            transform: translateY(-2px);
+            box-shadow:
+                0 12px 0 var(--accent-shadow),
+                0 22px 34px rgba(86, 214, 122, 0.32);
+        }
+
+        .submit-button:active {
+            transform: translateY(6px);
+            box-shadow:
+                0 4px 0 var(--accent-shadow),
+                0 10px 16px rgba(86, 214, 122, 0.22);
+        }
+    </style>
+</head>
+<body>
+    <main class="panel">
+        <div class="sheet-icon" aria-hidden="true"></div>
+        <h2>Enviar planilha</h2>
+        <p class="subtitle">
+            Importe a planilha que vai alimentar os registros do sistema e servir de base para a automacao.
+        </p>
+
+        <form method="post" enctype="multipart/form-data">
+            {% csrf_token %}
+            <input class="file-input" type="file" name="planilha" required>
+            <button class="submit-button" type="submit">Importar</button>
+        </form>
+    </main>
+</body>
+</html>

@@ -156,6 +156,7 @@ Campos principais:
 ### Interface
 
 - Django Templates
+- JavaScript para polling do status em tempo real
 
 ## Requisitos
 
@@ -219,8 +220,8 @@ python manage.py test
 
 - separação entre os apps `registros` e `automations`
 - uso de `services.py` para manter lógica de negócio fora das views
-- modelagem de importações como lote (`ImportacaoPlanilha`)
-- modelagem de histórico de execução por registro (`ResultadoExecucaoRegistro`)
+- modelagem de importações como lote com `ImportacaoPlanilha`
+- modelagem de histórico de execução por registro com `ResultadoExecucaoRegistro`
 - atualização em tempo real via polling HTTP
 - execução em background para não bloquear a resposta da interface
 

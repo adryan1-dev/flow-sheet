@@ -78,15 +78,6 @@ Handles spreadsheet import and imported records.
 ### automations
 Handles browser automation execution and execution history.
 
-### accounts
-Currently present as scaffold / placeholder.
-
-### logs
-Currently present as scaffold / placeholder.
-
-### uploads
-Currently present as scaffold / placeholder.
-
 Main apps currently in active use:
 
 - registros

@@ -166,7 +166,7 @@ Campos principais:
 ## Instalação
 
 ```bash
-git clone <url-do-repositorio>
+git clone https://github.com/adryan1-dev/flow-sheet.git
 cd flow-sheet
 python -m venv venv
 venv\Scripts\activate

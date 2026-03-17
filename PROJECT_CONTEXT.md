@@ -1,303 +1,518 @@
-
-# FlowSheet — Project Context
+# FlowSheet - Project Context
 
 ## Project Overview
+
 FlowSheet is a backend-focused web application built with Python and Django.
 Its goal is to automate data-driven workflows using spreadsheet input.
 
-The system allows a user to:
+The current version of the system allows a user to:
 
 1. Upload an Excel spreadsheet
-2. Parse and store the spreadsheet rows in the database
-3. Use the stored records to run web automations using Playwright
-4. Automatically fill forms on external systems
+2. Parse the spreadsheet and persist its rows in the database
+3. Organize imported rows by import batch
+4. Edit imported records inside the application before running the automation
+5. Execute browser automations using Playwright based on the imported data
+6. Track execution progress in real time, row by row
+7. Review execution history and reprocess only failed records
 
-This acts as a simple RPA (Robotic Process Automation) system controlled by spreadsheet data.
+This project acts as a simple spreadsheet-driven RPA platform, focused on backend architecture, automation orchestration, and data persistence.
 
 ---
 
-# Tech Stack
+## Tech Stack
 
-Backend
+### Backend
 - Python
 - Django
 
-Automation
+### Automation
 - Playwright
 
-Data Processing
+### Data Processing
 - openpyxl
 
-Database (development)
+### Database (development)
 - SQLite
 
-Templates
-- Django Templates (simple HTML)
+### Templates / UI
+- Django Templates
+- Vanilla JavaScript for polling execution status in real time
 
 ---
 
-# Architecture
+## High-Level Architecture
 
-Template → View → Service → Model → Database
+Template -> View -> Service -> Model -> Database
 
-Templates
-Responsible only for rendering HTML.
+### Templates
+Responsible for rendering HTML and visual status information.
 
-Views
+### Views
 Handle HTTP requests and responses.
+Keep orchestration logic light and delegate business rules to services.
 
-Services
-Contain the business logic of the system.
+### Services
+Contain business logic such as:
+- spreadsheet import
+- automation execution
+- background processing
+- execution progress persistence
 
-Models
-Represent database tables using Django ORM.
+### Models
+Represent domain entities and database tables using Django ORM.
 
-Database
-Stores application state and automation records.
-
----
-
-# Main Apps
-
-accounts
-automations
-logs
-registros
-
-Main apps currently in use:
-
-registros  
-automations
+### Database
+Stores:
+- imported spreadsheets
+- imported records
+- execution metadata
+- per-record execution results
 
 ---
 
-# Core Model
+## Main Apps
 
-Model: Registro
+### registros
+Handles spreadsheet import and imported records.
+
+### automations
+Handles browser automation execution and execution history.
+
+### accounts
+Currently present as scaffold / placeholder.
+
+### logs
+Currently present as scaffold / placeholder.
+
+### uploads
+Currently present as scaffold / placeholder.
+
+Main apps currently in active use:
+
+- registros
+- automations
+
+---
+
+## Core Domain Models
+
+### Model: ImportacaoPlanilha
+
+Represents a spreadsheet import batch.
 
 Fields:
-
-- nome
-- empresa
-- email
-- telefone
+- nome_arquivo
+- status
+- total_registros
 - criado_em
 
-These records represent rows from the spreadsheet and are used as inputs for automation.
+Purpose:
+- keep import history
+- group imported records
+- represent the origin of a set of rows
 
 ---
 
-# Feature 1 — Spreadsheet Import
+### Model: Registro
 
-Route:
-
-/upload
-
-Flow:
-
-User uploads spreadsheet  
-↓  
-View upload_planilha receives file  
-↓  
-Service importar_planilha parses spreadsheet using openpyxl  
-↓  
-Rows converted into Registro objects  
-↓  
-Saved using bulk_create()
-
-Important behavior:
-
-Before importing a new spreadsheet:
-
-Registro.objects.all().delete()
-
-This ensures only the latest spreadsheet exists in the system.
-
----
-
-# Feature 2 — List Records
-
-Route:
-
-/registros
-
-View:
-
-listar_registros
-
-Behavior:
-
-Fetch records from database  
-↓  
-Render template lista_registros.html  
-↓  
-Display records in table
-
-Limit:
-
-50 records per page.
-
----
-
-# Feature 3 — Automation Test Page
-
-Fake form used to simulate an external system.
-
-Route:
-
-/form-teste
+Represents one row imported from a spreadsheet.
 
 Fields:
-
+- importacao
 - nome
 - empresa
 - email
 - telefone
+- status
+- mensagem_erro
+- executado_em
+- criado_em
 
-When submitted the page displays the received data.
+Purpose:
+- store structured input data
+- represent a record that can be edited and later used by automation
 
-Used only for testing Playwright automation.
-
----
-
-# Feature 4 — Automation Execution
-
-On the records page there is a button:
-
-"Iniciar automação"
-
-This triggers:
-
-POST /automations/executar
-
-View:
-
-executar_automacao_view
-
-The view calls:
-
-executar_automacoes()
-
-from the automation service.
-
----
-
-# Automation Service
-
-File:
-
-automations/services.py
-
-Current flow:
-
-Fetch records from database  
-↓  
-Start Playwright browser  
-↓  
-Open /form-teste  
-↓  
-Fill form fields using record data  
-↓  
-Submit form  
-↓  
-Repeat for each record
-
-Playwright runs with:
-
-headless=False  
-slow_mo enabled
-
-This allows visual debugging of the automation.
-
----
-
-# Playwright Configuration
-
-Browser launch:
-
-browser = p.chromium.launch(headless=False, slow_mo=500)
-
-Context:
-
-context = browser.new_context(
-    viewport={"width": 1280, "height": 900}
-)
-
-Page:
-
-page = context.new_page()
-
----
-
-# Current System Flow
-
-Spreadsheet Upload  
-↓  
-Django parses Excel  
-↓  
-Records saved in database  
-↓  
-Automation service retrieves records  
-↓  
-Playwright browser opens  
-↓  
-Form is automatically filled and submitted
-
----
-
-# Current Status
-
-Working features:
-
-✓ Spreadsheet upload  
-✓ Database persistence  
-✓ Record listing page  
-✓ Automation trigger button  
-✓ Playwright browser automation  
-✓ Form auto-filling
-
----
-
-# Planned Improvements
-
-1. Automation logs
-
-Registro → success / error
-
-2. Record status
-
+Statuses:
 - pendente
+- executando
 - executado
 - erro
 
-3. Automation results page
+---
 
-4. Background workers
+### Model: Execution
 
-Future architecture:
+Represents a single automation run.
 
-HTTP request  
-↓  
-Create job  
-↓  
-Queue system  
-↓  
-Worker executes automation
+Fields:
+- importacao
+- user
+- status
+- target_url
+- total_linhas
+- linhas_processadas
+- sucesso_count
+- erro_count
+- mensagem_erro
+- criado_em
+- finalizado_em
+
+Purpose:
+- track the execution lifecycle
+- persist aggregated automation results
+
+Statuses:
+- pending
+- running
+- completed
+- error
 
 ---
 
-# AI Guidelines
+### Model: ResultadoExecucaoRegistro
+
+Represents the result of processing one record inside one execution.
+
+Fields:
+- execution
+- registro
+- status
+- mensagem_erro
+- executado_em
+
+Purpose:
+- keep execution history per record
+- support execution detail pages
+- support failed-record reprocessing
+
+Statuses:
+- executado
+- erro
+
+---
+
+## Feature 1 - Spreadsheet Import
+
+### Route
+- `/upload/`
+
+### View
+- `upload_planilha`
+
+### Service
+- `importar_planilha()`
+
+### Flow
+
+User uploads spreadsheet  
+-> View receives file  
+-> Service creates `ImportacaoPlanilha`  
+-> Service loads workbook with `openpyxl`  
+-> Rows are converted into `Registro` objects  
+-> Records are linked to the import batch  
+-> Records are saved using `bulk_create()`  
+-> Import batch is updated with total record count and final status
+
+### Important behavior
+
+- Old records are no longer deleted
+- Each upload creates a new import batch
+- Imported records remain associated with their original spreadsheet import
+
+---
+
+## Feature 2 - List Imported Records
+
+### Route
+- `/registros/`
+
+### View
+- `listar_registros`
+
+### Behavior
+
+- fetches the most recent `ImportacaoPlanilha`
+- loads up to 50 records from that import
+- renders the records in a table
+- shows latest import information
+- shows latest execution information
+- polls execution status when an automation is running
+
+### Extra behavior
+
+- the error column is shown only when at least one record has an error
+- each row can be edited from the list page
+
+---
+
+## Feature 3 - Edit Imported Record
+
+### Route
+- `/registros/<id>/editar/`
+
+### View
+- `editar_registro`
+
+### Behavior
+
+- allows editing one imported record directly in the app
+- resets automation state when a record is changed
+
+When a record is edited:
+- status becomes `pendente`
+- previous error message is cleared
+- previous execution timestamp is cleared
+
+This ensures the edited row is considered a fresh input for future automation runs.
+
+---
+
+## Feature 4 - Automation Test Page
+
+### Route
+- `/form-teste/`
+
+### View
+- `form_teste`
+
+### Purpose
+
+This page simulates an external target system for Playwright.
+
+Fields:
+- nome
+- empresa
+- email
+- telefone
+
+When submitted, the page renders the received data in a result template.
+
+Used only for internal testing and automation validation.
+
+---
+
+## Feature 5 - Automation Execution
+
+### Trigger
+
+On the records page there is a button:
+- `Iniciar automação`
+
+### Route
+- `POST /automations/executar/`
+
+### View
+- `executar_automacao_view`
+
+### Current behavior
+
+- starts the automation in background
+- creates an `Execution`
+- redirects back to the records page with the current execution id
+- the records page polls execution status in real time
+
+---
+
+## Automation Service
+
+### File
+- `automations/services.py`
+
+### Main responsibilities
+
+- create `Execution`
+- resolve which records will be processed
+- process records one by one
+- persist progress after each record
+- create `ResultadoExecucaoRegistro`
+- update `Registro` state in real time
+
+### Current flow
+
+Resolve import / records  
+-> Create `Execution`  
+-> Start background thread  
+-> For each record:
+   - mark record as `executando`
+   - open Playwright browser
+   - navigate to target page
+   - fill fields using record data
+   - submit form
+   - persist result immediately
+   - update execution counters
+-> Finish execution with final status
+
+### Important note
+
+The current MVP uses an in-process background thread for async execution.
+This is enough for learning and portfolio purposes, but not ideal for production.
+
+Production-ready evolution would use:
+- queue
+- worker
+- broker (e.g. Redis)
+- task processor (e.g. Celery)
+
+---
+
+## Real-Time Status Updates
+
+### Current implementation
+
+The system now supports line-by-line status updates while automation is still running.
+
+How it works:
+
+- automation runs in a background thread
+- each record is persisted immediately after processing
+- `/automations/execucoes/<id>/status/` exposes execution progress as JSON
+- the records page polls this endpoint using JavaScript
+- DOM is updated without full page reload
+
+This allows the user to see:
+- execution status
+- processed count
+- success count
+- error count
+- per-row status changes
+- per-row error messages
+
+in near real time
+
+---
+
+## Feature 6 - Execution Detail Page
+
+### Route
+- `/automations/execucoes/<id>/`
+
+### View
+- `detalhe_execucao_view`
+
+### Behavior
+
+- shows execution summary
+- shows all per-record results linked to that execution
+- polls the execution status endpoint while the execution is running
+
+This page exists as a dedicated execution history / monitoring screen.
+
+---
+
+## Feature 7 - Reprocess Failed Records
+
+### Route
+- `POST /automations/execucoes/<id>/reprocessar-erros/`
+
+### View
+- `reprocessar_erros_view`
+
+### Behavior
+
+- filters only records that failed in a previous execution
+- starts a new background execution using just those failed records
+- keeps execution history for comparison
+
+---
+
+## Current Request / Data Flow
+
+### Import Flow
+
+Spreadsheet upload  
+-> Django view receives file  
+-> Import service parses workbook  
+-> `ImportacaoPlanilha` is created  
+-> `Registro` rows are persisted  
+-> Latest import is available in `/registros/`
+
+### Automation Flow
+
+User clicks start  
+-> `Execution` is created  
+-> background thread starts  
+-> Playwright processes records  
+-> each row updates status immediately  
+-> JSON status endpoint exposes progress  
+-> frontend polling updates the page live  
+-> execution detail page stores final history
+
+---
+
+## Current Status
+
+Working features:
+
+- Spreadsheet upload
+- Import batch history
+- Database persistence
+- Imported record listing
+- Record editing inside the app
+- Automation trigger
+- Playwright browser automation
+- Real-time status updates per row
+- Execution detail page
+- Failed-record reprocessing
+- Automated tests for import, edit, execution, status API, and reprocessing
+
+---
+
+## Known Limitations
+
+1. Spreadsheet structure is strict
+
+The import service currently assumes exactly four columns:
+- nome
+- empresa
+- email
+- telefone
+
+If the spreadsheet has more or fewer columns, import may fail.
+
+2. Background execution uses local threads
+
+This works for MVP and local development, but is not production-grade.
+
+3. No robust spreadsheet validation yet
+
+There is no formal validation for:
+- extra columns
+- missing columns
+- invalid data types
+- malformed emails
+
+4. No production queue / worker yet
+
+The current architecture intentionally stops short of Celery/Redis.
+
+---
+
+## Suggested Next Improvements
+
+1. Spreadsheet validation layer
+2. Background workers with Celery + Redis
+3. Authentication and per-user ownership
+4. Logging system
+5. API endpoints
+6. PostgreSQL for production
+7. Dockerized deployment
+8. Better automation target abstraction
+
+---
+
+## AI / Code Generation Guidelines
 
 When generating code for this project:
 
 - Keep business logic inside services
 - Avoid heavy logic in views
-- Automation logic must stay in automations app
-- Spreadsheet logic stays in registros app
-- Templates remain simple Django templates
+- Automation logic must stay in `automations`
+- Spreadsheet logic must stay in `registros`
+- Templates should remain simple and mostly presentational
+- Preserve clear separation between import domain and automation domain
 
 ---
 
-# Project Goal
+## Project Goal
 
-Build a data-driven automation system where spreadsheet records control automated web interactions.
+Build a data-driven automation platform where spreadsheet records control automated web interactions, with clear backend architecture, execution history, and real-time monitoring suitable for learning Django and backend engineering.
